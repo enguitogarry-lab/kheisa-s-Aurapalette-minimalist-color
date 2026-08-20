@@ -1,0 +1,7 @@
+{
+  "name": "AuraPalette - Minimalist Color Palette & Theme Generator",
+  "description": "A minimalist, designer-first color palette generator for creating cohesive aesthetic themes, accessible UI previews, image extraction, and multi-format token exports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
