@@ -1,0 +1,68 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Node Dependencies
+        run: npm install
+
+      - name: Install Capacitor CLI & Android
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Ensure Capacitor Config Exists
+        run: |
+          if [ ! -f "capacitor.config.json" ] && [ ! -f "capacitor.config.ts" ]; then
+            echo '{"appId":"com.studymate.app","appName":"StudyMate","webDir":"dist"}' > capacitor.config.json
+          fi
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Initialize Android Platform
+        run: |
+          if [ ! -d "android" ]; then
+            npx --yes @capacitor/cli add android
+          fi
+
+      - name: Sync Capacitor Assets
+        run: npx --yes @capacitor/cli sync android
+
+      - name: Configure Android SDK Location & Accept Licenses
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Make Gradle Executable
+        run: chmod +x android/gradlew
+
+      - name: Build Android Debug APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StudyMate-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
